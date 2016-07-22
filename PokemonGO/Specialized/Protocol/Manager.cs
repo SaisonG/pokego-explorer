@@ -1,6 +1,7 @@
 ﻿using PokemonGO.Specialized.Protocol.Containers;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -37,7 +38,10 @@ namespace PokemonGO.Specialized.Protocol
 
                 return (Result != null); // TODO: Real check
             }
-            catch { }
+            catch (Exception e)
+            {
+                Debug.Print(e.Message);
+            }
 
             return false;
         }

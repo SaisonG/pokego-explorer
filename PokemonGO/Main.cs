@@ -6,6 +6,7 @@ using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace PokemonGO
@@ -82,7 +83,19 @@ namespace PokemonGO
             SetPlayerPosition(Position);
         }
 
-        private async void AttemptLogin()
+        private async void AttemptLoginWithRetries()
+        {
+            bool loginpassed = false;
+            int retrycount = Settings.LOGIN_RETRIES; 
+            while (!loginpassed && retrycount > 0)
+            {
+                loginpassed = await AttemptLogin();
+                System.Threading.Thread.Sleep(1500); 
+                retrycount--;
+            }
+        }
+
+        private async Task<bool> AttemptLogin()
         {
             try
             {
@@ -90,7 +103,7 @@ namespace PokemonGO
 
                 Specialized.Controls.Helper.SetVisible(btnLogin, false);
                 Specialized.Controls.Helper.SetVisible(btnPause, false);
-                
+               
                 Client = new Specialized.Protocol.Manager(gMapControl1.Position.Lat, gMapControl1.Position.Lng);
 
                 if (!await Client.PerformLogin(Settings.PTC_USERNAME, Settings.PTC_PASSWORD))
@@ -99,7 +112,7 @@ namespace PokemonGO
 
                     Specialized.Controls.Helper.SetVisible(btnLogin);
                     
-                    return;
+                    return false;
                 }
 
                 WriteLine("Logged in!");
@@ -107,10 +120,12 @@ namespace PokemonGO
                 gMapControl1.GrayScaleMode = false;
 
                 Specialized.Controls.Helper.SetVisible(btnPause);
+                return true; 
             }
             catch (Exception ex)
             {
                 WriteLine("Error! Message: " + ex.Message);
+                return false;
             }
         }
 
@@ -192,8 +207,9 @@ namespace PokemonGO
 
                 IsExploring = false;
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
+                WriteLine("Error! Message: " + ex.Message);
             }
         }
 
@@ -272,7 +288,7 @@ namespace PokemonGO
 
         private void btnLogin_Click(object sender, EventArgs e)
         {
-            AttemptLogin();
+            AttemptLoginWithRetries();
         }
 
         #region GUI
